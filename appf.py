@@ -1,75 +1,66 @@
 import gradio as gr
 import subprocess
-import whisper
-from googletrans import Translator
-import asyncio
-import edge_tts
 import os
+from googletrans import Translator
+from TTS.api import TTS
+from IPython.display import Audio, display
+import ffmpeg
+import whisper 
 
-# Extract and Transcribe Audio
-def extract_and_transcribe_audio(video_path):
-    ffmpeg_command = f"ffmpeg -i '{video_path}' -acodec pcm_s24le -ar 48000 -q:a 0 -map a -y 'output_audio.wav'"
-    subprocess.run(ffmpeg_command, shell=True)
-    model = whisper.load_model("base")
-    result = model.transcribe("output_audio.wav")
-    return result["text"], result['language']
+def process_video(video, high_quality, target_language):
+    try:
+        output_filename = "resized_video.mp4"
+        if high_quality:
+            ffmpeg.input(video).output(output_filename, vf='scale=-1:720').run()
+            video_path = output_filename
+        else:
+            video_path = video
 
-# Translate Text
-def translate_text(whisper_text, whisper_language, target_language):
-    language_mapping = {
-        'English': 'en',
-        'Spanish': 'es',
-        # ... (other mappings)
-    }
-    target_language_code = language_mapping[target_language]
-    translator = Translator()
-    translated_text = translator.translate(whisper_text, src=whisper_language, dest=target_language_code).text
-    return translated_text
+        ffmpeg.input(video_path).output('output_audio.wav', acodec='pcm_s24le', ar=48000, map='a').run()
 
-# Generate Voice
-async def generate_voice(translated_text, target_language):
-    VOICE_MAPPING = {
-        'English': 'en-GB-SoniaNeural',
-        'Spanish': 'es-ES-PabloNeural',
-        # ... (other mappings)
-    }
-    voice = VOICE_MAPPING[target_language]
-    communicate = edge_tts.Communicate(translated_text, voice)
-    await communicate.save("output_synth.wav")
-    return "output_synth.wav"
+        model = whisper.load_model("base")
+        result = model.transcribe("output_audio.wav")
+        whisper_text = result["text"]
+        whisper_language = result['language']
 
-# Generate Lip-synced Video (Placeholder)
-def generate_lip_synced_video(video_path, output_audio_path):
-    # Your lip-synced video generation code here
-    # ...
-    return "output_high_qual.mp4"
+        language_mapping = {
+            'English': 'en',
+            'Spanish': 'es',
+            'French': 'fr',
+            'German': 'de',
+            'Italian': 'it',
+            'Portuguese': 'pt',
+            'Polish': 'pl',
+            'Turkish': 'tr',
+            'Russian': 'ru',
+            'Dutch': 'nl',
+            'Czech': 'cs',
+            'Arabic': 'ar',
+            'Chinese (Simplified)': 'zh-cn'
+        }
+        target_language_code = language_mapping[target_language]
+        translator = Translator()
+        translated_text = translator.translate(whisper_text, src=whisper_language, dest=target_language_code).text
 
-# Main function to be called by Gradio
-def process_video(video, target_language):
-    video_path = "uploaded_video.mp4"
-    with open(video_path, "wb") as f:
-        f.write(video.read())
+        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v1", gpu=True)
+        tts.tts_to_file(translated_text, speaker_wav='output_audio.wav', file_path="output_synth.wav", language=target_language_code)
 
-    # Step 1: Extract and Transcribe Audio
-    whisper_text, whisper_language = extract_and_transcribe_audio(video_path)
+        subprocess.run(f"python inference.py --face {video_path} --audio 'output_synth.wav' --outfile 'output_high_qual.mp4'", shell=True)
 
-    # Step 2: Translate Text
-    translated_text = translate_text(whisper_text, whisper_language, target_language)
+        return "output_high_qual.mp4"
 
-    # Step 3: Generate Voice
-    loop = asyncio.get_event_loop()
-    output_audio_path = loop.run_until_complete(generate_voice(translated_text, target_language))
+    except Exception as e:
+        return str(e)
 
-    # Step 4: Generate Lip-synced Video
-    output_video_path = generate_lip_synced_video(video_path, output_audio_path)
-
-    return output_video_path
-
-# Gradio Interface
 iface = gr.Interface(
-    fn=process_video, 
-    inputs=["file", gr.Interface.Component(type="dropdown", choices=["English", "Spanish"])], 
-    outputs="file",
+    fn=process_video,
+    inputs=[
+        gr.Video(),
+        gr.inputs.Checkbox(label="High Quality"),
+        gr.inputs.Dropdown(choices=["English", "Spanish", "French", "German", "Italian", "Portuguese", "Polish", "Turkish", "Russian", "Dutch", "Czech", "Arabic", "Chinese (Simplified)"], label="Target Language for Dubbing")
+    ],
+    outputs=gr.outputs.File(),
     live=False
 )
-iface.launch()
+
+iface.launch(share=True)
