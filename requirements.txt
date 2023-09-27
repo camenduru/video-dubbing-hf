@@ -15,4 +15,3 @@ ffmpeg-python
 scipy 
 soundfile 
 pydub 
-shlex
