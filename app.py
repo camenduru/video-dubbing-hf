@@ -9,7 +9,6 @@ from scipy.signal import wiener
 import soundfile as sf
 from pydub import AudioSegment
 import numpy as np
-import shlex
 import librosa
 
 os.environ["COQUI_TOS_AGREED"] = "1"
