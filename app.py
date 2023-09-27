@@ -1,41 +1,85 @@
+import gradio as gr
+import subprocess
 import os
-import wget
-import zipfile
+from googletrans import Translator
+from TTS.api import TTS
+import ffmpeg
+import whisper
+from scipy.signal import wiener
+import soundfile as sf
+from pydub import AudioSegment
+import numpy as np
+import shlex
+import librosa
 
+os.environ["COQUI_TOS_AGREED"] = "1"
+def process_video(video, high_quality, target_language):
+    output_filename = "resized_video.mp4"
+    if high_quality:
+        ffmpeg.input(video).output(output_filename, vf='scale=-1:720').run()
+        video_path = output_filename
+    else:
+        video_path = video
 
-# Clone necessary repositories
-os.system("git clone https://github.com/vinthony/video-retalking.git")
-os.system("git clone https://github.com/davisking/dlib.git")
-os.system("git clone https://github.com/openai/whisper.git")
+    # Debugging Step 1: Check if video_path exists
+    if not os.path.exists(video_path):
+        return f"Error: {video_path} does not exist."
 
-# Install dlib
-os.system("cd dlib && python setup.py install")
+    ffmpeg.input(video_path).output('output_audio.wav', acodec='pcm_s24le', ar=48000, map='a').run()
 
-# Create checkpoints directory in video-retalking
-os.makedirs("./video-retalking/checkpoints", exist_ok=True)
+    y, sr = sf.read("output_audio.wav")
+    y = y.astype(np.float32)
+    y_denoised = wiener(y)
+    sf.write("output_audio_denoised.wav", y_denoised, sr)
 
-# Download model checkpoints and other files
-model_urls = [
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/30_net_gen.pth",
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/BFM.zip",
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/DNet.pt",
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/ENet.pth",
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/expression.mat",
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/face3d_pretrain_epoch_20.pth",
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/GFPGANv1.3.pth",
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/GPEN-BFR-512.pth",
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/LNet.pth",
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/ParseNet-latest.pth",
-    "https://github.com/vinthony/video-retalking/releases/download/v0.0.1/shape_predictor_68_face_landmarks.dat"
-]
+    sound = AudioSegment.from_file("output_audio_denoised.wav", format="wav")
+    sound = sound.apply_gain(0)  # Reduce gain by 5 dB
+    sound = sound.low_pass_filter(3000).high_pass_filter(100)
+    sound.export("output_audio_processed.wav", format="wav")
 
-for url in model_urls:
-    wget.download(url, out="./video-retalking/checkpoints")
+    shell_command = f"ffmpeg -y -i output_audio_processed.wav -af lowpass=3000,highpass=100 output_audio_final.wav".split(" ")
+    subprocess.run([item for item in shell_command], capture_output=False, text=True, check=True)
 
-# Unzip files
-with zipfile.ZipFile("./video-retalking/checkpoints/BFM.zip", 'r') as zip_ref:
-    zip_ref.extractall("./video-retalking/checkpoints")
+    model = whisper.load_model("base")
+    result = model.transcribe("output_audio_final.wav")
+    whisper_text = result["text"]
+    whisper_language = result['language']
 
-# Install Python packages
-#os.system("pip install basicsr==1.4.2 face-alignment==1.3.4 kornia==0.5.1 ninja==1.10.2.3 einops==0.4.1 facexlib==0.2.5 librosa==0.9.2 build")
+    language_mapping = {'English': 'en', 'Spanish': 'es', 'French': 'fr', 'German': 'de', 'Italian': 'it', 'Portuguese': 'pt', 'Polish': 'pl', 'Turkish': 'tr', 'Russian': 'ru', 'Dutch': 'nl', 'Czech': 'cs', 'Arabic': 'ar', 'Chinese (Simplified)': 'zh-cn'}
+    target_language_code = language_mapping[target_language]
+    translator = Translator()
+    translated_text = translator.translate(whisper_text, src=whisper_language, dest=target_language_code).text
 
+    tts = TTS("tts_models/multilingual/multi-dataset/xtts_v1")
+    tts.to('cuda')  # Replacing deprecated gpu=True
+    tts.tts_to_file(translated_text, speaker_wav='output_audio_final.wav', file_path="output_synth.wav", language=target_language_code)
+
+    pad_top = 0
+    pad_bottom = 15
+    pad_left = 0
+    pad_right = 0
+    rescaleFactor = 1
+
+    # Debugging Step 2: Remove quotes around the video path
+    video_path_fix = video_path
+
+    cmd = f"python Wav2Lip/inference.py --checkpoint_path '/Wav2Lip/checkpoints/wav2lip_gan.pth' --face {shlex.quote(video_path_fix)} --audio 'output_synth.wav' --pads {pad_top} {pad_bottom} {pad_left} {pad_right} --resize_factor {rescaleFactor} --nosmooth --outfile 'output_video.mp4'"
+    subprocess.run(cmd, shell=True)
+    # Debugging Step 3: Check if output video exists
+    if not os.path.exists("output_video.mp4"):
+        return "Error: output_video.mp4 was not generated."
+
+    return "output_video.mp4"
+
+iface = gr.Interface(
+    fn=process_video,
+    inputs=[
+        gr.Video(),
+        gr.inputs.Checkbox(label="High Quality"),
+        gr.inputs.Dropdown(choices=["English", "Spanish", "French", "German", "Italian", "Portuguese", "Polish", "Turkish", "Russian", "Dutch", "Czech", "Arabic", "Chinese (Simplified)"], label="Target Language for Dubbing")
+    ],
+    outputs=gr.outputs.File(),
+    live=False
+)
+
+iface.launch(share=True)
