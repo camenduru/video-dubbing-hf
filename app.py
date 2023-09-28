@@ -1,7 +1,7 @@
 import tempfile
 import gradio as gr
 import subprocess
-import os
+import os, stat
 from googletrans import Translator
 from TTS.api import TTS
 import ffmpeg
