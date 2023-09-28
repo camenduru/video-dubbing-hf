@@ -12,6 +12,7 @@ from pydub import AudioSegment
 import numpy as np
 import librosa
 from zipfile import ZipFile
+import shlex
 
 os.environ["COQUI_TOS_AGREED"] = "1"
 
