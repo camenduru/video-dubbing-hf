@@ -9,6 +9,7 @@ facexlib
 librosa==0.8.0
 build
 whisper
+git+https://github.com/openai/whisper.git 
 wget
 TTS 
 ffmpeg-python
