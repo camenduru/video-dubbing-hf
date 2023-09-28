@@ -90,8 +90,7 @@ def process_video(video, high_quality, target_language):
     subprocess.run(cmd, shell=True)
     # Debugging Step 3: Check if output video exists
     if not os.path.exists("output_video.mp4"):
-        return "Error: output_video.mp4 was not generated."
-
+        raise FileNotFoundError("Error: output_video.mp4 was not generated.")
     return "output_video.mp4"
 
 iface = gr.Interface(
