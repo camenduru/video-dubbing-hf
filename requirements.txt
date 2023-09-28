@@ -1,13 +1,5 @@
 jiwer
 googletrans==4.0.0-rc1
-basicsr
-face-alignment
-kornia
-ninja
-einops
-facexlib
-librosa==0.8.0
-build
 whisper
 git+https://github.com/openai/whisper.git 
 wget
@@ -16,3 +8,4 @@ scipy
 soundfile 
 pydub
 TTS@ git+https://github.com/coqui-ai/tts.git@aa8fa4756e9130e536f0dfc610617db103a43efd
+torch
