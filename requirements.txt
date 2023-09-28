@@ -2,7 +2,6 @@ TTS
 whisper
 more-itertools
 tiktoken
-numpy
 cython
 torch
 torchaudio
