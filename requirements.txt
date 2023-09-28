@@ -10,3 +10,4 @@ pydub
 scikit-learn
 torch
 TTS@ git+https://github.com/coqui-ai/tts.git
+shlex
