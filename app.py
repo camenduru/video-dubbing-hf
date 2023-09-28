@@ -38,7 +38,8 @@ def process_video(video, high_quality, target_language):
         try:
             ffmpeg.input(video_path).output(audio_output, acodec='pcm_s24le', ar=48000, map='a').run()
         except ffmpeg.Error as e:
-            return f"FFmpeg error: {e.stderr.decode('utf-8')}"
+            stderr_output = e.stderr.decode('utf-8') if e.stderr else "Unknown error"
+            return f"FFmpeg error: {stderr_output}"
 
 
         y, sr = sf.read("output_audio.wav")
