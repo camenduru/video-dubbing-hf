@@ -1,4 +1,4 @@
-TTS
+numpy
 whisper
 more-itertools
 tiktoken
@@ -26,3 +26,4 @@ pydub
 opencv-python
 torchvision
 mediapipe
+TTS
