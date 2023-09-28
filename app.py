@@ -13,6 +13,13 @@ import numpy as np
 import librosa
 from zipfile import ZipFile
 import shlex
+import librosa
+import numpy as np
+import cv2
+import torch
+import torchvision
+from tqdm import tqdm
+from numba import jit
 
 os.environ["COQUI_TOS_AGREED"] = "1"
 
