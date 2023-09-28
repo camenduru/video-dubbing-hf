@@ -54,8 +54,15 @@ def process_video(video, high_quality, target_language):
     language_mapping = {'English': 'en', 'Spanish': 'es', 'French': 'fr', 'German': 'de', 'Italian': 'it', 'Portuguese': 'pt', 'Polish': 'pl', 'Turkish': 'tr', 'Russian': 'ru', 'Dutch': 'nl', 'Czech': 'cs', 'Arabic': 'ar', 'Chinese (Simplified)': 'zh-cn'}
     target_language_code = language_mapping[target_language]
     translator = Translator()
-    translated_text = translator.translate(whisper_text, src=whisper_language, dest=target_language_code).text
-
+    try:
+        translated_text = translator.translate(whisper_text, src=whisper_language, dest=target_language_code).text
+    except AttributeError as e:
+        print("Failed to translate text. Here's the error:")
+        print(e)
+        print("Response text for debugging:")
+        print(r.text)  # Assuming `r` is the response object
+        translated_text = "Translation failed"
+        
     tts = TTS("tts_models/multilingual/multi-dataset/xtts_v1")
     tts.to('cuda')  # Replacing deprecated gpu=True
     tts.tts_to_file(translated_text, speaker_wav='output_audio_final.wav', file_path="output_synth.wav", language=target_language_code)
