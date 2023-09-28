@@ -50,7 +50,9 @@ def process_video(video, high_quality, target_language):
     result = model.transcribe("output_audio_final.wav")
     whisper_text = result["text"]
     whisper_language = result['language']
-
+    
+    print(whisper_text)
+    
     language_mapping = {'English': 'en', 'Spanish': 'es', 'French': 'fr', 'German': 'de', 'Italian': 'it', 'Portuguese': 'pt', 'Polish': 'pl', 'Turkish': 'tr', 'Russian': 'ru', 'Dutch': 'nl', 'Czech': 'cs', 'Arabic': 'ar', 'Chinese (Simplified)': 'zh-cn'}
     target_language_code = language_mapping[target_language]
     translator = Translator()
