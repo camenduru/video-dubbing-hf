@@ -24,4 +24,3 @@ pydub
 opencv-python
 torchvision
 mediapipe
-TTS
