@@ -9,10 +9,11 @@ scipy
 soundfile 
 pydub
 scikit-learn
-librosa
+librosa==0.7.0
 numpy
 opencv-python
 torch
 torchvision
 tqdm
-numba
+numba==0.48
+mediapipe==0.8.11
