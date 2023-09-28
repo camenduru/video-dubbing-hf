@@ -2,6 +2,7 @@ import tempfile
 import gradio as gr
 import subprocess
 import os, stat
+import uuid
 from googletrans import Translator
 from TTS.api import TTS
 import ffmpeg
@@ -13,8 +14,6 @@ import numpy as np
 import librosa
 from zipfile import ZipFile
 import shlex
-import librosa
-import numpy as np
 import cv2
 import torch
 import torchvision
@@ -28,39 +27,46 @@ st = os.stat('ffmpeg')
 os.chmod('ffmpeg', st.st_mode | stat.S_IEXEC)
 
 def process_video(video, high_quality, target_language):
-    output_filename = "resized_video.mp4"
+    # Check video duration
+    video_info = ffmpeg.probe(video)
+    video_duration = float(video_info['streams'][0]['duration'])
+    if video_duration > 90:
+        return gr.Interface.Warnings("Video duration exceeds 1 minute and 30 seconds. Please upload a shorter video.")
+
+    run_uuid = uuid.uuid4().hex[:6]
+    output_filename = f"{run_uuid}_resized_video.mp4"
+
     if high_quality:
         ffmpeg.input(video).output(output_filename, vf='scale=-1:720').run()
         video_path = output_filename
     else:
         video_path = video
 
-    # Debugging Step 1: Check if video_path exists
     if not os.path.exists(video_path):
         return f"Error: {video_path} does not exist."
 
-    ffmpeg.input(video_path).output('output_audio.wav', acodec='pcm_s24le', ar=48000, map='a').run()
+    ffmpeg.input(video_path).output(f"{run_uuid}_output_audio.wav", acodec='pcm_s24le', ar=48000, map='a').run()
 
-    y, sr = sf.read("output_audio.wav")
+    y, sr = sf.read(f"{run_uuid}_output_audio.wav")
     y = y.astype(np.float32)
     y_denoised = wiener(y)
-    sf.write("output_audio_denoised.wav", y_denoised, sr)
+    sf.write(f"{run_uuid}_output_audio_denoised.wav", y_denoised, sr)
 
-    sound = AudioSegment.from_file("output_audio_denoised.wav", format="wav")
-    sound = sound.apply_gain(0)  # Reduce gain by 5 dB
+    sound = AudioSegment.from_file(f"{run_uuid}_output_audio_denoised.wav", format="wav")
+    sound = sound.apply_gain(0)
     sound = sound.low_pass_filter(3000).high_pass_filter(100)
-    sound.export("output_audio_processed.wav", format="wav")
+    sound.export(f"{run_uuid}_output_audio_processed.wav", format="wav")
 
-    shell_command = f"ffmpeg -y -i output_audio_processed.wav -af lowpass=3000,highpass=100 output_audio_final.wav".split(" ")
+    shell_command = f"ffmpeg -y -i {run_uuid}_output_audio_processed.wav -af lowpass=3000,highpass=100 {run_uuid}_output_audio_final.wav".split(" ")
     subprocess.run([item for item in shell_command], capture_output=False, text=True, check=True)
 
     model = whisper.load_model("base")
-    result = model.transcribe("output_audio_final.wav")
+    result = model.transcribe(f"{run_uuid}_output_audio_final.wav")
     whisper_text = result["text"]
     whisper_language = result['language']
-    
+
     print(whisper_text)
-    
+
     language_mapping = {'English': 'en', 'Spanish': 'es', 'French': 'fr', 'German': 'de', 'Italian': 'it', 'Portuguese': 'pt', 'Polish': 'pl', 'Turkish': 'tr', 'Russian': 'ru', 'Dutch': 'nl', 'Czech': 'cs', 'Arabic': 'ar', 'Chinese (Simplified)': 'zh-cn'}
     target_language_code = language_mapping[target_language]
     translator = Translator()
@@ -71,11 +77,9 @@ def process_video(video, high_quality, target_language):
         print("Failed to translate text. Likely an issue with token extraction in the Google Translate API.")
         translated_text = "Translation failed due to API issue."
 
-
-        
     tts = TTS("tts_models/multilingual/multi-dataset/xtts_v1")
-    tts.to('cuda')  # Replacing deprecated gpu=True
-    tts.tts_to_file(translated_text, speaker_wav='output_audio_final.wav', file_path="output_synth.wav", language=target_language_code)
+    tts.to('cuda')
+    tts.tts_to_file(translated_text, speaker_wav=f"{run_uuid}_output_audio_final.wav", file_path=f"{run_uuid}_output_synth.wav", language=target_language_code)
 
     pad_top = 0
     pad_bottom = 15
@@ -83,15 +87,33 @@ def process_video(video, high_quality, target_language):
     pad_right = 0
     rescaleFactor = 1
 
-    # Debugging Step 2: Remove quotes around the video path
     video_path_fix = video_path
 
-    cmd = f"python Wav2Lip/inference.py --checkpoint_path 'Wav2Lip/checkpoints/wav2lip_gan.pth' --face {shlex.quote(video_path_fix)} --audio 'output_synth.wav' --pads {pad_top} {pad_bottom} {pad_left} {pad_right} --resize_factor {rescaleFactor} --nosmooth --outfile 'output_video.mp4'"
+    cmd = f"python Wav2Lip/inference.py --checkpoint_path 'Wav2Lip/checkpoints/wav2lip_gan.pth' --face {shlex.quote(video_path_fix)} --audio '{run_uuid}_output_synth.wav' --pads {pad_top} {pad_bottom} {pad_left} {pad_right} --resize_factor {rescaleFactor} --nosmooth --outfile '{run_uuid}_output_video.mp4'"
     subprocess.run(cmd, shell=True)
-    # Debugging Step 3: Check if output video exists
-    if not os.path.exists("output_video.mp4"):
-        raise FileNotFoundError("Error: output_video.mp4 was not generated.")
-    return "output_video.mp4"
+
+    if not os.path.exists(f"{run_uuid}_output_video.mp4"):
+        raise FileNotFoundError(f"Error: {run_uuid}_output_video.mp4 was not generated.")
+
+    output_video_path = f"{run_uuid}_output_video.mp4"
+
+    # Cleanup: Delete all generated files except the final output video
+    files_to_delete = [
+        f"{run_uuid}_resized_video.mp4",
+        f"{run_uuid}_output_audio.wav",
+        f"{run_uuid}_output_audio_denoised.wav",
+        f"{run_uuid}_output_audio_processed.wav",
+        f"{run_uuid}_output_audio_final.wav",
+        f"{run_uuid}_output_synth.wav"
+    ]
+
+    for file in files_to_delete:
+        try:
+            os.remove(file)
+        except FileNotFoundError:
+            print(f"File {file} not found for deletion.")
+
+    return output_video_path
 
 iface = gr.Interface(
     fn=process_video,
@@ -100,7 +122,7 @@ iface = gr.Interface(
         gr.inputs.Checkbox(label="High Quality"),
         gr.inputs.Dropdown(choices=["English", "Spanish", "French", "German", "Italian", "Portuguese", "Polish", "Turkish", "Russian", "Dutch", "Czech", "Arabic", "Chinese (Simplified)"], label="Target Language for Dubbing")
     ],
-    outputs=gr.outputs.File(),
+    outputs=gr.outputs.Video(),
     live=False
 )
 
