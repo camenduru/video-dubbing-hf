@@ -1,3 +1,4 @@
+whisper
 more-itertools
 tiktoken
 cython
