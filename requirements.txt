@@ -1,5 +1,6 @@
 TTS@ git+https://github.com/coqui-ai/tts.git
 jiwer
+numpy
 googletrans==4.0.0-rc1
 wget
 ffmpeg-python
