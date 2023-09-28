@@ -15,5 +15,5 @@ opencv-python
 torch
 torchvision
 tqdm
-numba==0.48
+numba
 mediapipe==0.8.11
