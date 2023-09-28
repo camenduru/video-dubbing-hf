@@ -26,8 +26,14 @@ def process_video(video, high_quality, target_language):
         if not os.path.exists(video_path):
             return f"Error: {video_path} does not exist."
 
-        audio_output = os.path.join(temp_dir, "output_audio.wav")
-        ffmpeg.input(video_path).output(audio_output, acodec='pcm_s24le', ar=48000, map='a', y=True).run()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            audio_output = os.path.join(temp_dir, "output_audio.wav")
+        
+        try:
+            ffmpeg.input(video_path).output(audio_output, acodec='pcm_s24le', ar=48000, map='a').run()
+        except ffmpeg.Error as e:
+            return f"FFmpeg error: {e.stderr.decode('utf-8')}"
+
 
         y, sr = sf.read("output_audio.wav")
         y = y.astype(np.float32)
