@@ -11,6 +11,7 @@ import soundfile as sf
 from pydub import AudioSegment
 import numpy as np
 import librosa
+from zipfile import ZipFile
 
 os.environ["COQUI_TOS_AGREED"] = "1"
 
