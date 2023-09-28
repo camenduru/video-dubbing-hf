@@ -123,7 +123,16 @@ iface = gr.Interface(
         gr.inputs.Dropdown(choices=["English", "Spanish", "French", "German", "Italian", "Portuguese", "Polish", "Turkish", "Russian", "Dutch", "Czech", "Arabic", "Chinese (Simplified)"], label="Target Language for Dubbing")
     ],
     outputs=gr.outputs.Video(),
-    live=False
+    live=False,
+    title="AI Video Dubbing",
+    description="""This tool was developed by [@artificialguybr](https://twitter.com/artificialguybr) using entirely open-source tools. Special thanks to Hugging Face for the GPU support. Thanks [@yeswondwer](https://twitter.com/@yeswondwerr) for original code.
+
+    **Note:**
+    - Video limit is 1 minute.
+    - Generation may take up to 5 minutes.
+    - The tool uses open-source models for all operations.
+    - Quality can be improved but would require more processing time per video.""",
+    allow_flagging=False
 )
 
 iface.launch()
