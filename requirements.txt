@@ -6,7 +6,7 @@ torch
 torchaudio
 soundfile
 ffmpeg-python
-librosa
+librosa==0.8.0
 scikit-learn
 numba
 inflect
