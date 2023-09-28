@@ -6,7 +6,7 @@ import uuid
 from googletrans import Translator
 from TTS.api import TTS
 import ffmpeg
-import whisper
+from faster_whisper import WhisperModel
 from scipy.signal import wiener
 import soundfile as sf
 from pydub import AudioSegment
@@ -25,6 +25,9 @@ os.environ["COQUI_TOS_AGREED"] = "1"
 ZipFile("ffmpeg.zip").extractall()
 st = os.stat('ffmpeg')
 os.chmod('ffmpeg', st.st_mode | stat.S_IEXEC)
+
+model_size = "small"
+model = WhisperModel(model_size, device="cuda", compute_type="int8")
 
 def process_video(radio, video, target_language):
     # Check video duration
@@ -60,11 +63,9 @@ def process_video(radio, video, target_language):
     shell_command = f"ffmpeg -y -i {run_uuid}_output_audio.wav -af lowpass=3000,highpass=100 {run_uuid}_output_audio_final.wav".split(" ")
     subprocess.run([item for item in shell_command], capture_output=False, text=True, check=True)
 
-    model = whisper.load_model("base")
-    result = model.transcribe(f"{run_uuid}_output_audio_final.wav")
-    whisper_text = result["text"]
-    whisper_language = result['language']
-
+    segments, info = model.transcribe(f"{run_uuid}_output_audio_final.wav", beam_size=5)
+    whisper_text = " ".join(segment.text for segment in segments)
+    whisper_language = info.language
     print(whisper_text)
 
     language_mapping = {'English': 'en', 'Spanish': 'es', 'French': 'fr', 'German': 'de', 'Italian': 'it', 'Portuguese': 'pt', 'Polish': 'pl', 'Turkish': 'tr', 'Russian': 'ru', 'Dutch': 'nl', 'Czech': 'cs', 'Arabic': 'ar', 'Chinese (Simplified)': 'zh-cn'}
