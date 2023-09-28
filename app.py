@@ -26,7 +26,7 @@ ZipFile("ffmpeg.zip").extractall()
 st = os.stat('ffmpeg')
 os.chmod('ffmpeg', st.st_mode | stat.S_IEXEC)
 
-def process_video(video, high_quality, target_language):
+def process_video(radio, video, target_language):
     # Check video duration
     video_info = ffmpeg.probe(video)
     video_duration = float(video_info['streams'][0]['duration'])
@@ -115,14 +115,22 @@ def process_video(video, high_quality, target_language):
 
     return output_video_path
 
+def swap(radio):
+    if(radio == "Upload"):
+        return gr.update(source="upload")
+    else:
+        return gr.update(source="webcam")
+        
+video = gr.Video()
+radio = gr.Radio(["Upload", "Record"], show_label=False)
 iface = gr.Interface(
     fn=process_video,
     inputs=[
-        gr.Video(),
-        gr.inputs.Checkbox(label="High Quality"),
-        gr.inputs.Dropdown(choices=["English", "Spanish", "French", "German", "Italian", "Portuguese", "Polish", "Turkish", "Russian", "Dutch", "Czech", "Arabic", "Chinese (Simplified)"], label="Target Language for Dubbing")
+        radio,
+        video,
+        gr.Dropdown(choices=["English", "Spanish", "French", "German", "Italian", "Portuguese", "Polish", "Turkish", "Russian", "Dutch", "Czech", "Arabic", "Chinese (Simplified)"], label="Target Language for Dubbing")
     ],
-    outputs=gr.outputs.Video(),
+    outputs=gr.Video(),
     live=False,
     title="AI Video Dubbing",
     description="""This tool was developed by [@artificialguybr](https://twitter.com/artificialguybr) using entirely open-source tools. Special thanks to Hugging Face for the GPU support. Thanks [@yeswondwer](https://twitter.com/@yeswondwerr) for original code.
@@ -134,5 +142,7 @@ iface = gr.Interface(
     - Quality can be improved but would require more processing time per video.""",
     allow_flagging=False
 )
-
-iface.launch()
+with gr.Blocks() as demo:
+    iface.render()
+    radio.change(swap, inputs=[radio], outputs=video)
+demo.launch()
