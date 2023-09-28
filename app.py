@@ -47,17 +47,17 @@ def process_video(video, high_quality, target_language):
 
     ffmpeg.input(video_path).output(f"{run_uuid}_output_audio.wav", acodec='pcm_s24le', ar=48000, map='a').run()
 
-    y, sr = sf.read(f"{run_uuid}_output_audio.wav")
-    y = y.astype(np.float32)
-    y_denoised = wiener(y)
-    sf.write(f"{run_uuid}_output_audio_denoised.wav", y_denoised, sr)
+    #y, sr = sf.read(f"{run_uuid}_output_audio.wav")
+    #y = y.astype(np.float32)
+    #y_denoised = wiener(y)
+    #sf.write(f"{run_uuid}_output_audio_denoised.wav", y_denoised, sr)
 
-    sound = AudioSegment.from_file(f"{run_uuid}_output_audio_denoised.wav", format="wav")
-    sound = sound.apply_gain(0)
-    sound = sound.low_pass_filter(3000).high_pass_filter(100)
-    sound.export(f"{run_uuid}_output_audio_processed.wav", format="wav")
+    #sound = AudioSegment.from_file(f"{run_uuid}_output_audio_denoised.wav", format="wav")
+    #sound = sound.apply_gain(0)
+    #sound = sound.low_pass_filter(3000).high_pass_filter(100)
+    #sound.export(f"{run_uuid}_output_audio_processed.wav", format="wav")
 
-    shell_command = f"ffmpeg -y -i {run_uuid}_output_audio_processed.wav -af lowpass=3000,highpass=100 {run_uuid}_output_audio_final.wav".split(" ")
+    shell_command = f"ffmpeg -y -i {run_uuid}_output_audio.wav -af lowpass=3000,highpass=100 {run_uuid}_output_audio_final.wav".split(" ")
     subprocess.run([item for item in shell_command], capture_output=False, text=True, check=True)
 
     model = whisper.load_model("base")
