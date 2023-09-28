@@ -83,7 +83,6 @@ def process_video(video, high_quality, target_language):
         # Debugging Step 3: Check if output video exists
         if not os.path.exists("output_video.mp4"):
             return "Error: output_video.mp4 was not generated."
-    
         return "output_video.mp4"  # Return the file path directly
     except Exception as e:
         return {"error": f"An unexpected error occurred: {str(e)}"}  # Keep the error as a dictionary
