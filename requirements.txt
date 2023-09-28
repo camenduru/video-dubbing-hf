@@ -8,5 +8,12 @@ scipy
 soundfile 
 pydub
 scikit-learn
+librosa
+numpy
+opencv-contrib-python
+opencv-python
 torch
+torchvision
+tqdm
+numba
 TTS@ git+https://github.com/coqui-ai/tts.git
