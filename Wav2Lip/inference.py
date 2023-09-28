@@ -8,6 +8,9 @@ import torch, face_detection
 from models import Wav2Lip
 import platform
 
+if not os.path.exists('temp'):
+    os.makedirs('temp')
+    
 parser = argparse.ArgumentParser(description='Inference code to lip-sync videos in the wild using Wav2Lip models')
 
 parser.add_argument('--checkpoint_path', type=str, 
@@ -246,6 +249,10 @@ def main():
 	batch_size = args.wav2lip_batch_size
 	gen = datagen(full_frames.copy(), mel_chunks)
 
+    if not out.isOpened():
+        print("Error: VideoWriter didn't open successfully.")
+        return
+        
 	for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, 
 											total=int(np.ceil(float(len(mel_chunks))/batch_size)))):
 		if i == 0:
