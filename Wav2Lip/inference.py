@@ -248,10 +248,6 @@ def main():
 
 	batch_size = args.wav2lip_batch_size
 	gen = datagen(full_frames.copy(), mel_chunks)
-
-    if not out.isOpened():
-        print("Error: VideoWriter didn't open successfully.")
-        return
         
 	for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, 
 											total=int(np.ceil(float(len(mel_chunks))/batch_size)))):
