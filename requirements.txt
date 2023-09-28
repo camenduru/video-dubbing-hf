@@ -1,6 +1,7 @@
 TTS
 whisper
-git+https://github.com/openai/whisper.git
+more-itertools
+tiktoken
 numpy
 cython
 torch
