@@ -13,6 +13,11 @@ import numpy as np
 import librosa
 
 os.environ["COQUI_TOS_AGREED"] = "1"
+
+ZipFile("ffmpeg.zip").extractall()
+st = os.stat('ffmpeg')
+os.chmod('ffmpeg', st.st_mode | stat.S_IEXEC)
+
 def process_video(video, high_quality, target_language):
     with tempfile.TemporaryDirectory() as temp_dir:
         output_filename = os.path.join(temp_dir, "resized_video.mp4")
