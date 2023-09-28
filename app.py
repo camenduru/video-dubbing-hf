@@ -57,9 +57,9 @@ def process_video(video, high_quality, target_language):
     try:
         translated_text = translator.translate(whisper_text, src=whisper_language, dest=target_language_code).text
     except AttributeError as e:
-        print("Failed to translate text. Here's the error:")
-        print(e)
-        translated_text = "Translation failed"
+        print("Failed to translate text. Likely an issue with token extraction in the Google Translate API.")
+        translated_text = "Translation failed due to API issue."
+
 
         
     tts = TTS("tts_models/multilingual/multi-dataset/xtts_v1")
