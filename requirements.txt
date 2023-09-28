@@ -15,4 +15,5 @@ TTS
 ffmpeg-python
 scipy 
 soundfile 
-pydub 
+pydub
+TTS@ git+https://github.com/coqui-ai/tts.git@aa8fa4756e9130e536f0dfc610617db103a43efd
