@@ -1,5 +1,3 @@
-numpy
-whisper
 more-itertools
 tiktoken
 cython
