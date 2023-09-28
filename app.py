@@ -20,26 +20,27 @@ st = os.stat('ffmpeg')
 os.chmod('ffmpeg', st.st_mode | stat.S_IEXEC)
 
 def process_video(video, high_quality, target_language):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        output_filename = os.path.join(temp_dir, "resized_video.mp4")
-        
-        if high_quality:
-            ffmpeg.input(video).output(output_filename, vf='scale=-1:720').run()
-            video_path = output_filename
-        else:
-            video_path = video
-
-        if not os.path.exists(video_path):
-            return f"Error: {video_path} does not exist."
-
+    try:
         with tempfile.TemporaryDirectory() as temp_dir:
-            audio_output = os.path.join(temp_dir, "output_audio.wav")
-        
-        try:
-            ffmpeg.input(video_path).output(audio_output, acodec='pcm_s24le', ar=48000, map='a').run()
-        except ffmpeg.Error as e:
-            stderr_output = e.stderr.decode('utf-8') if e.stderr else "Unknown error"
-            return f"FFmpeg error: {stderr_output}"
+            output_filename = os.path.join(temp_dir, "resized_video.mp4")
+            
+            if high_quality:
+                ffmpeg.input(video).output(output_filename, vf='scale=-1:720').run()
+                video_path = output_filename
+            else:
+                video_path = video
+
+            if not os.path.exists(video_path):
+                return {"error": f"{video_path} does not exist."}
+
+            with tempfile.TemporaryDirectory() as temp_dir:
+                audio_output = os.path.join(temp_dir, "output_audio.wav")
+            
+            try:
+                ffmpeg.input(video_path).output(audio_output, acodec='pcm_s24le', ar=48000, map='a').run()
+            except ffmpeg.Error as e:
+                stderr_output = e.stderr.decode('utf-8') if e.stderr else "Unknown error"
+                return {"error": f"FFmpeg error: {stderr_output}"}
 
 
         y, sr = sf.read("output_audio.wav")
@@ -83,7 +84,9 @@ def process_video(video, high_quality, target_language):
         if not os.path.exists("output_video.mp4"):
             return "Error: output_video.mp4 was not generated."
     
-        return "output_video.mp4"
+        return {"file": "output_video.mp4"}
+    except Exception as e:
+        return {"error": f"An unexpected error occurred: {str(e)}"}
 
 iface = gr.Interface(
     fn=process_video,
