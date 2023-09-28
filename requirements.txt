@@ -1,5 +1,5 @@
 jiwer
-googletrans
+googletrans==4.0.0-rc1
 basicsr
 face-alignment
 kornia
