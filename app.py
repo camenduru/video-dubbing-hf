@@ -86,7 +86,7 @@ def process_video(video, high_quality, target_language):
     # Debugging Step 2: Remove quotes around the video path
     video_path_fix = video_path
 
-    cmd = f"python Wav2Lip/inference.py --checkpoint_path '/Wav2Lip/checkpoints/wav2lip_gan.pth' --face {shlex.quote(video_path_fix)} --audio 'output_synth.wav' --pads {pad_top} {pad_bottom} {pad_left} {pad_right} --resize_factor {rescaleFactor} --nosmooth --outfile 'output_video.mp4'"
+    cmd = f"python Wav2Lip/inference.py --checkpoint_path 'Wav2Lip/checkpoints/wav2lip_gan.pth' --face {shlex.quote(video_path_fix)} --audio 'output_synth.wav' --pads {pad_top} {pad_bottom} {pad_left} {pad_right} --resize_factor {rescaleFactor} --nosmooth --outfile 'output_video.mp4'"
     subprocess.run(cmd, shell=True)
     # Debugging Step 3: Check if output video exists
     if not os.path.exists("output_video.mp4"):
