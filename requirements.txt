@@ -9,7 +9,7 @@ scipy
 soundfile 
 pydub
 scikit-learn
-librosa==0.7.0
+librosa
 numpy
 opencv-python
 torch
