@@ -9,5 +9,4 @@ soundfile
 pydub
 scikit-learn
 torch
-shlex
 TTS@ git+https://github.com/coqui-ai/tts.git
