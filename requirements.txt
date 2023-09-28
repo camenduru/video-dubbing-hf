@@ -1,3 +1,4 @@
+TTS@ git+https://github.com/coqui-ai/tts.git
 jiwer
 googletrans==4.0.0-rc1
 whisper
@@ -16,4 +17,3 @@ torch
 torchvision
 tqdm
 numba
-TTS@ git+https://github.com/coqui-ai/tts.git
