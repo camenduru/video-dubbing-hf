@@ -1,8 +1,6 @@
 TTS@ git+https://github.com/coqui-ai/tts.git
 jiwer
 googletrans==4.0.0-rc1
-whisper
-git+https://github.com/openai/whisper.git 
 wget
 ffmpeg-python
 scipy 
@@ -10,7 +8,6 @@ soundfile
 pydub
 scikit-learn
 librosa
-numpy
 opencv-python
 torch
 torchvision
