@@ -4,6 +4,7 @@ cython
 torch
 torchaudio
 soundfile
+ffmpeg-python
 librosa
 scikit-learn
 numba
