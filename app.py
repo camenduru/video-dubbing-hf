@@ -59,9 +59,8 @@ def process_video(video, high_quality, target_language):
     except AttributeError as e:
         print("Failed to translate text. Here's the error:")
         print(e)
-        print("Response text for debugging:")
-        print(r.text)  # Assuming `r` is the response object
         translated_text = "Translation failed"
+
         
     tts = TTS("tts_models/multilingual/multi-dataset/xtts_v1")
     tts.to('cuda')  # Replacing deprecated gpu=True
