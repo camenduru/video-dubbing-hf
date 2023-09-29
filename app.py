@@ -64,7 +64,9 @@ def process_video(radio, video, target_language):
     output_filename = f"{run_uuid}_resized_video.mp4"
     ffmpeg.input(video).output(output_filename, vf='scale=-1:720').run()
     video_path = output_filename
-
+    
+    #Time tracking
+    start_time = time.time()
     if not os.path.exists(video_path):
         return f"Error: {video_path} does not exist."
 
@@ -134,6 +136,12 @@ def process_video(radio, video, target_language):
         except FileNotFoundError:
             print(f"File {file} not found for deletion.")
 
+    # Stop the timer
+    end_time = time.time()
+    
+    # Calculate and print the time taken
+    time_taken = end_time - start_time
+    print(f"Time taken to process video: {time_taken:.2f} seconds")
     return output_video_path
     
     # Display peak usages at the end
