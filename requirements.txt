@@ -1,3 +1,4 @@
+gputil
 faster-whisper
 more-itertools
 tiktoken
