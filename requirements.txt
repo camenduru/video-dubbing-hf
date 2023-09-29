@@ -27,3 +27,4 @@ pydub
 opencv-python
 torchvision
 mediapipe
+opencv_python
