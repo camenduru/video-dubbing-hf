@@ -37,13 +37,10 @@ def process_video(radio, video, target_language):
         return gr.Interface.Warnings("Video duration exceeds 1 minute and 30 seconds. Please upload a shorter video.")
 
     run_uuid = uuid.uuid4().hex[:6]
+    
     output_filename = f"{run_uuid}_resized_video.mp4"
-
-    if high_quality:
-        ffmpeg.input(video).output(output_filename, vf='scale=-1:720').run()
-        video_path = output_filename
-    else:
-        video_path = video
+    ffmpeg.input(video).output(output_filename, vf='scale=-1:720').run()
+    video_path = output_filename
 
     if not os.path.exists(video_path):
         return f"Error: {video_path} does not exist."
@@ -146,4 +143,5 @@ iface = gr.Interface(
 with gr.Blocks() as demo:
     iface.render()
     radio.change(swap, inputs=[radio], outputs=video)
+demo.queue(concurrency_count=2, max_size=15)
 demo.launch()
