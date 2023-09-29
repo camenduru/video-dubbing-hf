@@ -29,25 +29,6 @@ ZipFile("ffmpeg.zip").extractall()
 st = os.stat('ffmpeg')
 os.chmod('ffmpeg', st.st_mode | stat.S_IEXEC)
 
-# Initialize peak usage variables
-peak_gpu_usage = 0.0
-peak_vram_usage = 0.0
-
-# Monitoring function
-def monitor_gpu_usage():
-    global peak_gpu_usage, peak_vram_usage
-    while True:
-        gpus = GPUtil.getGPUs()
-        for gpu in gpus:
-            peak_gpu_usage = max(peak_gpu_usage, gpu.load)
-            peak_vram_usage = max(peak_vram_usage, gpu.memoryUsed)
-        time.sleep(1)  # Check every second
-
-# Start the monitoring thread
-monitor_thread = threading.Thread(target=monitor_gpu_usage)
-monitor_thread.daemon = True
-monitor_thread.start()
-
 #Whisper
 model_size = "small"
 model = WhisperModel(model_size, device="cuda", compute_type="int8")
@@ -138,17 +119,6 @@ def process_video(radio, video, target_language):
         except FileNotFoundError:
             print(f"File {file} not found for deletion.")
 
-    # Stop the timer
-    end_time = time.time()
-    
-    # Calculate and print the time taken
-    time_taken = end_time - start_time
-    print(f"Time taken to process video: {time_taken:.2f} seconds")
-
-    # Display peak usages at the end
-    print(f"Peak GPU usage: {peak_gpu_usage * 100}%")
-    print(f"Peak VRAM usage: {peak_vram_usage}MB")
-    
     return output_video_path
     
     
