@@ -1,24 +1,11 @@
-import tempfile
 import gradio as gr
-import subprocess
-import os, stat
-import uuid
+import subprocess, os, uuid, ffmpeg, shlex, torch
 from googletrans import Translator
 from TTS.api import TTS
-import ffmpeg
 from faster_whisper import WhisperModel
-from scipy.signal import wiener
-import soundfile as sf
-from pydub import AudioSegment
 import numpy as np
-import librosa
 from zipfile import ZipFile
-import shlex
-import cv2
-import torch
-import torchvision
 from tqdm import tqdm
-from numba import jit
 
 os.environ["COQUI_TOS_AGREED"] = "1"
 
