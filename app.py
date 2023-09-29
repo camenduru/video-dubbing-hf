@@ -142,11 +142,13 @@ def process_video(radio, video, target_language):
     # Calculate and print the time taken
     time_taken = end_time - start_time
     print(f"Time taken to process video: {time_taken:.2f} seconds")
-    return output_video_path
-    
+
     # Display peak usages at the end
     print(f"Peak GPU usage: {peak_gpu_usage * 100}%")
     print(f"Peak VRAM usage: {peak_vram_usage}MB")
+    
+    return output_video_path
+    
     
 def swap(radio):
     if(radio == "Upload"):
