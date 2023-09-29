@@ -19,9 +19,6 @@ import torch
 import torchvision
 from tqdm import tqdm
 from numba import jit
-import threading
-import time
-import GPUtil
 
 os.environ["COQUI_TOS_AGREED"] = "1"
 
@@ -39,7 +36,9 @@ def process_video(radio, video, target_language):
     video_duration = float(video_info['streams'][0]['duration'])
     if video_duration > 90:
         return gr.Interface.Warnings("Video duration exceeds 1 minute and 30 seconds. Please upload a shorter video.")
-
+    if target_language is None:
+        return gr.Interface.Warnings("Please select a Target Language for Dubbing.")
+        
     run_uuid = uuid.uuid4().hex[:6]
     
     output_filename = f"{run_uuid}_resized_video.mp4"
@@ -48,8 +47,6 @@ def process_video(radio, video, target_language):
 
     video_path = output_filename
     
-    #Time tracking
-    start_time = time.time()
     if not os.path.exists(video_path):
         return f"Error: {video_path} does not exist."
 
@@ -107,12 +104,9 @@ def process_video(radio, video, target_language):
     files_to_delete = [
         f"{run_uuid}_resized_video.mp4",
         f"{run_uuid}_output_audio.wav",
-        f"{run_uuid}_output_audio_denoised.wav",
-        f"{run_uuid}_output_audio_processed.wav",
         f"{run_uuid}_output_audio_final.wav",
         f"{run_uuid}_output_synth.wav"
     ]
-
     for file in files_to_delete:
         try:
             os.remove(file)
