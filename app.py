@@ -62,8 +62,8 @@ def process_video(radio, video, target_language):
     run_uuid = uuid.uuid4().hex[:6]
     
     output_filename = f"{run_uuid}_resized_video.mp4"
-    ffmpeg.input(video).output(output_filename, vf='scale=-1:720:force_original_aspect_ratio=decrease').run()
-    #ffmpeg.input(video).output(output_filename, vf='scale=-2:720').run()
+    #ffmpeg.input(video).output(output_filename, vf='scale=-1:720:force_original_aspect_ratio=decrease').run()
+    ffmpeg.input(video).output(output_filename, vf='scale=-2:720').run()
 
     video_path = output_filename
     
