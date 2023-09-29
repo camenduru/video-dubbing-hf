@@ -22,10 +22,6 @@ from numba import jit
 
 os.environ["COQUI_TOS_AGREED"] = "1"
 
-ZipFile("ffmpeg.zip").extractall()
-st = os.stat('ffmpeg')
-os.chmod('ffmpeg', st.st_mode | stat.S_IEXEC)
-
 #Whisper
 model_size = "small"
 model = WhisperModel(model_size, device="cuda", compute_type="int8")
@@ -42,7 +38,6 @@ def process_video(radio, video, target_language):
     run_uuid = uuid.uuid4().hex[:6]
     
     output_filename = f"{run_uuid}_resized_video.mp4"
-    #ffmpeg.input(video).output(output_filename, vf='scale=-1:720:force_original_aspect_ratio=decrease').run()
     ffmpeg.input(video).output(output_filename, vf='scale=-2:720').run()
 
     video_path = output_filename
@@ -51,16 +46,6 @@ def process_video(radio, video, target_language):
         return f"Error: {video_path} does not exist."
 
     ffmpeg.input(video_path).output(f"{run_uuid}_output_audio.wav", acodec='pcm_s24le', ar=48000, map='a').run()
-
-    #y, sr = sf.read(f"{run_uuid}_output_audio.wav")
-    #y = y.astype(np.float32)
-    #y_denoised = wiener(y)
-    #sf.write(f"{run_uuid}_output_audio_denoised.wav", y_denoised, sr)
-
-    #sound = AudioSegment.from_file(f"{run_uuid}_output_audio_denoised.wav", format="wav")
-    #sound = sound.apply_gain(0)
-    #sound = sound.low_pass_filter(3000).high_pass_filter(100)
-    #sound.export(f"{run_uuid}_output_audio_processed.wav", format="wav")
 
     shell_command = f"ffmpeg -y -i {run_uuid}_output_audio.wav -af lowpass=3000,highpass=100 {run_uuid}_output_audio_final.wav".split(" ")
     subprocess.run([item for item in shell_command], capture_output=False, text=True, check=True)
@@ -147,4 +132,4 @@ with gr.Blocks() as demo:
     iface.render()
     radio.change(swap, inputs=[radio], outputs=video)
 demo.queue(concurrency_count=2, max_size=15)
-demo.launch()
+demo.launch(share=True, debug=True)

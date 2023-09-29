@@ -1,6 +1,0 @@
-libblas-dev
-liblapack-dev
-libx11-dev
-libopenblas-dev
-unzip
-libsentencepiece-dev
