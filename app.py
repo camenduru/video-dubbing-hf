@@ -19,6 +19,9 @@ import torch
 import torchvision
 from tqdm import tqdm
 from numba import jit
+import threading
+import time
+import GPUtil
 
 os.environ["COQUI_TOS_AGREED"] = "1"
 
@@ -26,6 +29,26 @@ ZipFile("ffmpeg.zip").extractall()
 st = os.stat('ffmpeg')
 os.chmod('ffmpeg', st.st_mode | stat.S_IEXEC)
 
+# Initialize peak usage variables
+peak_gpu_usage = 0.0
+peak_vram_usage = 0.0
+
+# Monitoring function
+def monitor_gpu_usage():
+    global peak_gpu_usage, peak_vram_usage
+    while True:
+        gpus = GPUtil.getGPUs()
+        for gpu in gpus:
+            peak_gpu_usage = max(peak_gpu_usage, gpu.load)
+            peak_vram_usage = max(peak_vram_usage, gpu.memoryUsed)
+        time.sleep(1)  # Check every second
+
+# Start the monitoring thread
+monitor_thread = threading.Thread(target=monitor_gpu_usage)
+monitor_thread.daemon = True
+monitor_thread.start()
+
+#Whisper
 model_size = "small"
 model = WhisperModel(model_size, device="cuda", compute_type="int8")
 
@@ -112,7 +135,11 @@ def process_video(radio, video, target_language):
             print(f"File {file} not found for deletion.")
 
     return output_video_path
-
+    
+    # Display peak usages at the end
+    print(f"Peak GPU usage: {peak_gpu_usage * 100}%")
+    print(f"Peak VRAM usage: {peak_vram_usage}MB")
+    
 def swap(radio):
     if(radio == "Upload"):
         return gr.update(source="upload")
