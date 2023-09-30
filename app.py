@@ -17,8 +17,6 @@ def process_video(radio, video, target_language):
     # Check video duration
     video_info = ffmpeg.probe(video)
     video_duration = float(video_info['streams'][0]['duration'])
-    if video_duration > 90:
-        return gr.Interface.Warnings("Video duration exceeds 1 minute and 30 seconds. Please upload a shorter video.")
     if target_language is None:
         return gr.Interface.Warnings("Please select a Target Language for Dubbing.")
         
